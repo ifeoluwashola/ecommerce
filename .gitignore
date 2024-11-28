@@ -1,0 +1,70 @@
+# Byte-compiled files and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environment variables and settings
+.env
+*.env
+
+# Virtual environment directories
+venv/
+env/
+.venv/
+
+# IDE and editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# SQLite database files (if you don't want to share the database)
+*.sqlite3
+*.db
+
+# Migrations (optional: exclude if you use Alembic migrations)
+migrations/versions/*.pyc
+migrations/versions/__pycache__/
+migrations/versions/*.py
+
+# Python egg files
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Coverage reports
+htmlcov/
+.coverage
+*.cover
+*.coverage.*
+
+# Pytest and testing cache
+.cache/
+*.pytest_cache/
+
+# Temporary files and backups
+*.bak
+*.tmp
+*.temp
+*.old
+*.orig
+
+# Jupyter Notebook checkpoints (if you use notebooks)
+.ipynb_checkpoints/
+
+# Node.js files (if using a frontend)
+node_modules/
+
+# Secrets or sensitive data
+secrets.json
+keys.json
+cert.pem
+key.pem
