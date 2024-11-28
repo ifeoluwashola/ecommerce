@@ -10,15 +10,21 @@ from sqlalchemy.orm.attributes import flag_modified
 # Router
 router = APIRouter()
 
-# Pydantic schemas for request and response
+# Helper function
+def recalculate_order_total(order: OrderModel):
+    """Recalculate the total price of an order based on its items."""
+    order.total_price = sum(item.get("price", 0.0) for item in order.items)
+
+# Pydantic schemas
 class OrderCreate(BaseModel):
     customer_id: UUID
     items: List[Dict[str, float]]  # List of items with their prices, e.g., {"name": "item1", "price": 50.0}
-    total_price: float
 
 class OrderRead(OrderCreate):
     order_id: UUID
     status: OrderStatus
+    total_price: float
+
 
 NOTFOUND = "Order not found"
 
@@ -26,10 +32,22 @@ NOTFOUND = "Order not found"
 # Create Order
 @router.post("/", response_model=OrderRead)
 async def create_order(order: OrderCreate, db: Session = Depends(get_db)):
+    """Create a new order."""
+    # Validate items
+    for item in order.items:
+        if "name" not in item or "price" not in item:
+            raise HTTPException(status_code=400, detail="Each item must include 'name' and 'price'")
+        if not isinstance(item["price"], (int, float)) or item["price"] < 0:
+            raise HTTPException(status_code=400, detail="Item price must be a non-negative number")
+
+    # Calculate total price
+    total_price = sum(item["price"] for item in order.items)
+
+    # Create and save order
     db_order = OrderModel(
         customer_id=order.customer_id,
         items=order.items,
-        total_price=order.total_price
+        total_price=total_price
     )
     db.add(db_order)
     db.commit()
@@ -40,6 +58,7 @@ async def create_order(order: OrderCreate, db: Session = Depends(get_db)):
 # Get Order
 @router.get("/{order_id}", response_model=OrderRead)
 async def get_order(order_id: UUID, db: Session = Depends(get_db)):
+    """Retrieve an order by its ID."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
@@ -49,13 +68,14 @@ async def get_order(order_id: UUID, db: Session = Depends(get_db)):
 # List Orders
 @router.get("/", response_model=List[OrderRead])
 async def list_orders(db: Session = Depends(get_db)):
-    orders = db.query(OrderModel).all()
-    return orders
+    """List all orders."""
+    return db.query(OrderModel).all()
 
 
 # Update Order Status
 @router.put("/{order_id}/status", response_model=OrderRead)
 async def update_order_status(order_id: UUID, status: OrderStatus, db: Session = Depends(get_db)):
+    """Update the status of an order."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
@@ -72,7 +92,7 @@ async def append_order_items(
     items_to_add: List[Dict[str, float]],
     db: Session = Depends(get_db)
 ):
-    """Append items with prices to the order's items list."""
+    """Append items to an order."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
@@ -81,12 +101,12 @@ async def append_order_items(
     for item in items_to_add:
         if "name" not in item or "price" not in item:
             raise HTTPException(status_code=400, detail="Each item must include 'name' and 'price'")
-        if item["price"] < 0:
-            raise HTTPException(status_code=400, detail="Item price cannot be negative")
+        if not isinstance(item["price"], (int, float)) or item["price"] < 0:
+            raise HTTPException(status_code=400, detail="Item price must be a non-negative number")
 
-    # Append new items and recalculate total price
+    # Append items and recalculate total price
     order.items.extend(items_to_add)
-    order.total_price = sum(item["price"] for item in order.items)
+    recalculate_order_total(order)
 
     flag_modified(order, "items")
     db.commit()
@@ -102,7 +122,7 @@ async def update_order_item(
     new_item: Dict[str, float],
     db: Session = Depends(get_db)
 ):
-    """Update a specific item in the order's items list."""
+    """Update a specific item in the order."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
@@ -115,33 +135,14 @@ async def update_order_item(
     if "price" not in new_item or new_item["price"] < 0:
         raise HTTPException(status_code=400, detail="New item must include a valid 'price'")
 
-    # Replace item and recalculate total price
+    # Update the item and recalculate total price
     item_to_update.update(new_item)
-    order.total_price = sum(item["price"] for item in order.items)
+    recalculate_order_total(order)
 
     flag_modified(order, "items")
     db.commit()
     db.refresh(order)
     return {"message": f"Item '{old_item_name}' updated successfully", "order": order}
-
-
-# Recalculate Total Price of Order
-@router.patch("/{order_id}/price")
-async def recalculate_total_price(
-    order_id: UUID,
-    db: Session = Depends(get_db)
-):
-    """Recalculate the total price of the order based on item prices."""
-    order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail=NOTFOUND)
-
-    # Recalculate total price from item prices
-    order.total_price = sum(item["price"] for item in order.items)
-
-    db.commit()
-    db.refresh(order)
-    return {"message": "Total price recalculated successfully", "order": order}
 
 
 # Remove Specific Item from Order
@@ -151,19 +152,18 @@ async def remove_order_item(
     item_name: str,
     db: Session = Depends(get_db)
 ):
-    """Remove a specific item from the order's items list."""
+    """Remove an item from the order."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
 
-    # Find the item to remove
+    # Find and remove the item
     item_to_remove = next((item for item in order.items if item["name"] == item_name), None)
     if not item_to_remove:
         raise HTTPException(status_code=400, detail=f"Item '{item_name}' not found in order")
 
-    # Remove the item and recalculate total price
     order.items.remove(item_to_remove)
-    order.total_price = sum(item["price"] for item in order.items)
+    recalculate_order_total(order)
 
     flag_modified(order, "items")
     db.commit()
@@ -174,7 +174,7 @@ async def remove_order_item(
 # Cancel Order
 @router.put("/{order_id}/cancel")
 async def cancel_order(order_id: UUID, db: Session = Depends(get_db)):
-    """Cancel an order by updating its status."""
+    """Cancel an order."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
@@ -189,7 +189,7 @@ async def cancel_order(order_id: UUID, db: Session = Depends(get_db)):
 # Delete Order
 @router.delete("/{order_id}")
 async def delete_order(order_id: UUID, db: Session = Depends(get_db)):
-    """Delete an order by its ID."""
+    """Delete an order."""
     order = db.query(OrderModel).filter(OrderModel.order_id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail=NOTFOUND)
