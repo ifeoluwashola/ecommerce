@@ -68,3 +68,5 @@ secrets.json
 keys.json
 cert.pem
 key.pem
+planning.txt
+docker-compose.yaml
