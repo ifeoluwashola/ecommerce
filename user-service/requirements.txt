@@ -1,0 +1,9 @@
+alembic
+pydantic-settings>=2.0.1
+pydantic[email]
+fastapi
+uvicorn
+psycopg2-binary
+sqlalchemy
+bcrypt >= 4.0.0
+passlib >= 1.7.4
