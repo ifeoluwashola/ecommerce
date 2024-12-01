@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 from app.schemas import UserCreate, UserRead
 from app.models import User
 from app.db.session import SessionLocal
-from app.utils.hashing import get_password_hash
+from app.utils.hashing import get_password_hash, verify_password
 import uuid
+from app.utils.auth import create_access_token, get_current_user, require_role
+from datetime import timedelta
 
 router = APIRouter()
 
@@ -46,3 +48,52 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     
     return new_user
+
+@router.post("/login", status_code=status.HTTP_200_OK)
+def login(email: str, password: str, db: Session = Depends(get_db)):
+    # Check if the user exists
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        )
+    
+    # Verify the password
+    if not verify_password(password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        )
+    
+    # Generate JWT token
+    access_token = create_access_token(
+        data={"sub": str(user.id), "email": user.email, "role": user.role},
+        expires_delta=timedelta(minutes=30),
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": UserRead.from_orm(user),  # Return user details (excluding sensitive data)
+    }
+
+@router.get("/profile", tags=["Private"])
+def get_user_profile(current_user: User = Depends(get_current_user)):
+    """
+    Retrieve the authenticated user's profile.
+    """
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "role": current_user.role,
+    }
+
+@router.get("/seller-dashboard", tags=["Private"])
+def seller_dashboard(current_user: User = Depends(require_role("seller"))):
+    """
+    Access restricted to sellers only.
+    """
+    return {"message": f"Welcome to the seller dashboard, {current_user.first_name}!"}

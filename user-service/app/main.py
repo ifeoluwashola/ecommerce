@@ -7,7 +7,7 @@ import uvicorn
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Order Service",
+    title="User Service",
     description="A microservice to manage E-commerce Users.",
     version="1.0.0"
 )
