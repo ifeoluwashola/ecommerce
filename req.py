@@ -25,8 +25,6 @@ def get_seller_dashboard():
     profile_response = requests.get('http://localhost:8002/api/users/seller-dashboard', headers=headers)
     return profile_response.json()
 
-
-
 profile_data = get_user_profile()
 seller_dashboard = get_seller_dashboard()
 print(profile_data)
