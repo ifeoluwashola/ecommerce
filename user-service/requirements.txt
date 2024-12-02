@@ -1,10 +1,17 @@
 alembic
-pydantic-settings>=2.0.1
+pydantic-settings
 pydantic[email]
 fastapi
 uvicorn
 psycopg2-binary
 sqlalchemy
-bcrypt >= 4.0.0
-passlib >= 1.7.4
+bcrypt
+passlib
 python-jose
+aiosmtplib
+pytest
+pytest-asyncio
+slowapi
+httpx
+python-multipart
+pytest-httpx

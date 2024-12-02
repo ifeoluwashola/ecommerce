@@ -19,6 +19,10 @@ class UserRead(UserBase):
     id: uuid.UUID
     role: str
     avatar_url: Optional[str]
+    model_config = {"from_attributes": True}
 
-    class Config:
-        from_attributes = True  # Allows SQLAlchemy models to be used as data sources
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr]
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=15)
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=50)
