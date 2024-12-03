@@ -15,3 +15,7 @@ slowapi
 httpx
 python-multipart
 pytest-httpx
+prometheus-fastapi-instrumentator
+opentelemetry-instrumentation-fastapi
+opentelemetry-sdk 
+opentelemetry-exporter-otlp

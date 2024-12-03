@@ -78,3 +78,23 @@ def require_role(role: str):
             )
         return current_user
     return role_checker
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    """
+    Dependency to ensure that the current user is an admin.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{current_user.first_name} {current_user.last_name} is not an Admin!"
+        )
+    return current_user
+
+def create_refresh_token(data: dict, expires_delta: timedelta = None):
+    """
+    Generate a refresh token with a longer expiration time.
+    """
+    to_encode = data.copy()
+    expire = datetime.now() + (expires_delta or timedelta(days=7))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)

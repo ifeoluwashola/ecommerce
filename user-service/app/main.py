@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from app.routes import user_router
+from app.routes import user_router, admin_router
 from app.db import Base, engine
 import uvicorn
 from slowapi import Limiter
@@ -7,6 +7,12 @@ from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -14,13 +20,31 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="User Service",
     description="A microservice to manage E-commerce Users.",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
+# Initialize
 app.include_router(user_router, prefix="/api/users", tags=["Users"])
+app.include_router(admin_router, prefix="/api/admin", tags=["Admins"])
+
+# Rate Limiter
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
+
+# Instrumentation
+trace_provider = TracerProvider()
+trace.set_tracer_provider(trace_provider)
+otlp_exporter = OTLPSpanExporter(endpoint="http://collector:4317", insecure=True)
+span_processor = BatchSpanProcessor(otlp_exporter)
+trace_provider.add_span_processor(span_processor)
+
+# Instrument FastAPI
+FastAPIInstrumentor.instrument_app(app)
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
 async def root():
