@@ -16,7 +16,7 @@ formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 
 # Loki handler for centralized logging
-loki_url = "http://loki:3100/loki/api/v1/push"  # Change this to Loki's URL in your setup
+loki_url = "http://localhost:3100/loki/api/v1/push"  # Change this to Loki's URL in your setup
 loki_handler = LokiHandler(
     url=loki_url,
     tags={"app": "user_service", "env": "development"},  # Add custom labels

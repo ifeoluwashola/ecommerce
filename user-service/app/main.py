@@ -37,7 +37,7 @@ app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 
 jaeger_exporter = JaegerExporter(
-    agent_host_name="jaeger",  # Use Render's Jaeger URL or your Jaeger service
+    agent_host_name="localhost",  # Use Render's Jaeger URL or your Jaeger service
     agent_port=6831,
 )
 
