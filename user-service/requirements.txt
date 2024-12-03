@@ -19,3 +19,7 @@ prometheus-fastapi-instrumentator
 opentelemetry-instrumentation-fastapi
 opentelemetry-sdk 
 opentelemetry-exporter-otlp
+opentelemetry.exporter.jaeger
+loguru
+python-logging-loki
+python-dotenv
