@@ -1,0 +1,14 @@
+version: 3
+agent:
+  authtoken: 2Ne7nVy6xE0jD2Qa0jvyHQDSTTT_3KUKfXGJa9sZALRYJwtKG
+tunnels:
+  loki:
+    addr: 3100
+    proto: http
+  prometheus:
+    addr: 9090
+    proto: http
+  jaeger:
+    addr: 16686
+    proto: http
+

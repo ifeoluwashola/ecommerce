@@ -19,8 +19,12 @@ services:
     container_name: user-service
     depends_on:
       - postgres
+      - loki
+      - jaeger
     environment:
-      DB_URL: "postgresql://user:password@postgres:5432/users_db"
+      - DATABASE_URL=postgresql://user:password@postgres:5432/users_db
+      - LOGGING_LOKI_URL=https://4154-102-215-57-58.ngrok-free.app
+      - JAEGER_AGENT_HOST=https://a001-102-215-57-58.ngrok-free.app
     ports:
       - "8002:8002"
     networks:

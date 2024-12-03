@@ -15,8 +15,13 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from dotenv import load_dotenv
+import os
+
+
 # Create tables
 Base.metadata.create_all(bind=engine)
+load_dotenv()
 
 app = FastAPI(
     title="User Service",
@@ -36,10 +41,10 @@ limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 
-# jaeger_exporter = JaegerExporter(
-#     agent_host_name="localhost",  # Use Render's Jaeger URL or your Jaeger service
-#     agent_port=6831,
-# )
+jaeger_exporter = JaegerExporter(
+    agent_host_name=os.getenv("JAEGER_AGENT_HOST", "localhost"),  # Use Render's Jaeger URL or your Jaeger service
+    agent_port=6831,
+)
 
 resource = Resource(attributes={
     SERVICE_NAME: "user-service"
@@ -47,7 +52,7 @@ resource = Resource(attributes={
 
 # Instrumentation
 trace_provider = TracerProvider(resource=resource)
-# trace_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))
+trace_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))
 trace.set_tracer_provider(trace_provider)
 otlp_exporter = OTLPSpanExporter(endpoint="http://collector:4317", insecure=True)
 span_processor = BatchSpanProcessor(otlp_exporter)
