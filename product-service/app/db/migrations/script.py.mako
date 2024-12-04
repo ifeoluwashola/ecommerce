@@ -19,10 +19,8 @@ depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
 
 
 def upgrade() -> None:
-    # Add `currency` column to `products` table
-    op.add_column('products', sa.Column('currency', sa.String(), nullable=False, server_default="USD"))
+    ${upgrades if upgrades else "pass"}
 
 
 def downgrade() -> None:
-    # Remove `currency` column from `products` table
-    op.drop_column('products', 'currency')
+    ${downgrades if downgrades else "pass"}

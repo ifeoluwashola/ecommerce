@@ -10,8 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - user_service_network
 
   user-service:
     build:
@@ -23,12 +21,10 @@ services:
       - jaeger
     environment:
       - DATABASE_URL=postgresql://user:password@postgres:5432/users_db
-      - LOGGING_LOKI_URL=https://4154-102-215-57-58.ngrok-free.app
-      - JAEGER_AGENT_HOST=https://a001-102-215-57-58.ngrok-free.app
+      - LOGGING_LOKI_URL=http://loki:3100/loki/api/v1/push
+      - JAEGER_AGENT_HOST=http://jaeger:6831
     ports:
       - "8002:8002"
-    networks:
-      - user_service_network
     restart: always
 
   jaeger:
@@ -43,8 +39,6 @@ services:
       - "5778:5778"
       - "9411:9411"
       - "5775:5775"
-    networks:
-      - user_service_network
     restart: always
 
   loki:
@@ -52,11 +46,9 @@ services:
     container_name: loki
     ports:
       - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
-    networks:
-      - user_service_network
+    # command: -config.file=/etc/loki/local-config.yaml
+    # volumes:
+    #   - ./loki-config.yaml:/etc/loki/local-config.yaml
     restart: always
 
   grafana:
@@ -71,8 +63,6 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-    networks:
-      - user_service_network
 
   prometheus:
     image: prom/prometheus:latest
@@ -81,14 +71,12 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
-    networks:
-      - user_service_network
     restart: always
 
 volumes:
   postgres_data:
   grafana_data:
 
-networks:
-  user_service_network:
-    driver: bridge
+# networks:
+#   user_service_network:
+#     driver: bridge
