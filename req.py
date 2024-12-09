@@ -1,8 +1,8 @@
 import requests
 
 # Login and obtain the token
-response = requests.post('http://localhost:8002/api/admin/login', params={
-    'email': 'user@gmail.com',
+response = requests.post('https://ecommerce-42z0.onrender.com/api/users/login', params={
+    'email': 'user+1@example.com',
     'password': 'password'
 })
 
@@ -14,7 +14,7 @@ def get_user_profile():
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
-    profile_response = requests.get('http://localhost:8002/api/users/profile', headers=headers)
+    profile_response = requests.get('https://ecommerce-42z0.onrender.com/api/users/profile', headers=headers)
     return profile_response.json()
 
 # Function to get Seller's dashboard if the user role is seller
@@ -22,7 +22,7 @@ def get_seller_dashboard():
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
-    profile_response = requests.get('http://localhost:8002/api/users/seller-dashboard', headers=headers)
+    profile_response = requests.get('https://ecommerce-42z0.onrender.com/api/users/seller-dashboard', headers=headers)
     return profile_response.json()
 
 def list_users():
@@ -40,10 +40,12 @@ def view_logs():
     return logs.json()
 
 profile_data = get_user_profile()
+print(profile_data)
 seller_dashboard = get_seller_dashboard()
-list_user = list_users()
-logs = view_logs()
+print(seller_dashboard)
+# list_user = list_users()
+# logs = view_logs()
 # print(profile_data)
-print(logs)
+# print(logs)
 
 # print(data)
