@@ -7,7 +7,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 
 from ..schemas.resquests.orders import OrderRead, OrderCreate, Item
-from ..schemas.responses.custom_responses import NOTFOUND
+from ..schemas.responses.custom_responses import ORDER_NOT_FOUND
 from ..models.order_model import Order as OrderModel, OrderStatus
 from ...database.db import get_db
 
