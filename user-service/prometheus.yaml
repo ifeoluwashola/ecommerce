@@ -1,9 +1,0 @@
-global:
-  scrape_interval: 15s  # Adjust this to suit your application's metrics granularity
-
-scrape_configs:
-  - job_name: "user-service"
-    metrics_path: "/metrics"  # Default metrics endpoint for Prometheus
-    scheme: "https"          # Use HTTPS since Render exposes your app over HTTPS
-    static_configs:
-      - targets: ["ecommerce-42z0.onrender.com:443", "localhost:8002"]  # Ensure the port is set for HTTPS
