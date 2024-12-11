@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from fastapi import FastAPI
 import uvicorn
 from starlette.middleware.cors import CORSMiddleware

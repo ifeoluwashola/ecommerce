@@ -1,5 +1,5 @@
 #!/usr/bin/python3
 
 
-class OrderManager:
+class UserManager:
     pass

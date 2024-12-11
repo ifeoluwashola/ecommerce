@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+
 from fastapi import APIRouter
 
 from ..resources import order_resource, product_resource

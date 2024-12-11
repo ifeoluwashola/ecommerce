@@ -1,23 +1,21 @@
-from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy import Column, Float, JSON, Enum
-from ...database.db import Base
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
-from enum import Enum as PyEnum
+#!/usr/bin/python3
 
 
-class OrderStatus(str, PyEnum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    CANCELED = "canceled"
+import sqlalchemy
+
+from ...database.db import metadata
+from ..models.enums import OrderStatus
 
 
-class Order(Base):
-    __tablename__ = "orders"
+order = sqlalchemy.Table(
+    "orders",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("description", sqlalchemy.Text),
+    # sqlalchemy.Column("photo_url", sqlalchemy.String(250), nullable=False),
+    sqlalchemy.Column("amount", sqlalchemy.Float, nullable=False),
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"), nullable=True),
+    sqlalchemy.Column("status", sqlalchemy.Enum(OrderStatus), server_default=OrderStatus.pending.name, nullable=True),
+    sqlalchemy.Column("buyer_id", sqlalchemy.ForeignKey("users.id"), nullable=False)
+)
 
-    order_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    customer_id = Column(UUID(as_uuid=True), nullable=False)
-    items = Column(MutableList.as_mutable(JSON), nullable=False)  # List of items with prices
-    total_price = Column(Float, nullable=False, default=0.0)  # Automatically calculated
-    status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)

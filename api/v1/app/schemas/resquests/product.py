@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from uuid import UUID
