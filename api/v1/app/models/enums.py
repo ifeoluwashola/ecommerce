@@ -13,7 +13,7 @@ class OrderStatus(str, Enum):
 
 class RoleType(str, Enum):
     merchant = "merchant"
-    seller = "buyer"
+    buyer = "buyer"
     admin = "admin"
 
 

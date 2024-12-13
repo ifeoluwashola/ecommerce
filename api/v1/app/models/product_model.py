@@ -21,7 +21,7 @@ product = sqlalchemy.Table(
     sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=sqlalchemy.text("timezone('UTC', now())"),
                       nullable=True),
     sqlalchemy.Column("status", sqlalchemy.Enum(ProductStatus), server_default=ProductStatus.available.name, nullable=False),
-    sqlalchemy.Column("merchant_id", sqlalchemy.ForeignKey("users.id"), nullable=False),
-    sqlalchemy.Column("merchant_store_id", sqlalchemy.ForeignKey("stores.id"), nullable=False)
+    sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False),
+    sqlalchemy.Column("user_store_id", sqlalchemy.ForeignKey("stores.id"), nullable=False)
 )
 

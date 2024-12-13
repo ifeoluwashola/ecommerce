@@ -17,6 +17,6 @@ store = sqlalchemy.Table(
     sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=sqlalchemy.text("timezone('UTC', now())"),
                       nullable=True),
     sqlalchemy.Column("status", sqlalchemy.Enum(StoreStatus), server_default=StoreStatus.inactive.name, nullable=False),
-    sqlalchemy.Column("owner_id", sqlalchemy.ForeignKey("merchants.id"), nullable=False)
+    sqlalchemy.Column("owner_id", sqlalchemy.ForeignKey("users.id"), nullable=False)
 )
 

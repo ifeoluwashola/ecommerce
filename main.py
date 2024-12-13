@@ -11,8 +11,16 @@ ORIGINS = [
 ]
 
 
-app = FastAPI()
+app = FastAPI(title="MartPlaza Backend")
 app.include_router(api_router)
+
+
+@app.get("/")
+async def index():
+    return {
+        "message": "MartPlaza, is a work in progress, give us some time."
+    }
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ORIGINS,
