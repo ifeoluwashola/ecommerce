@@ -99,7 +99,6 @@ class AuthManager:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-
     @staticmethod
     async def sign_in_user_with_whatsapp(whatsapp_number):
         """
