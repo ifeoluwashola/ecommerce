@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 
 
-from decouple import config
+# from decouple import config
+import os
+from dotenv import load_dotenv
 from supabase import create_client, Client
 
-url: str = config("SUPABASE_URL")
-key: str = config("SUPABASE_KEY")
+load_dotenv()
+url: str = os.getenv("SUPABASE_URL")
+key: str = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 
