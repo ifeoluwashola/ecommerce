@@ -11,7 +11,7 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128, description="Password must be strong.")
     first_name: str
-    lastname: str
+    last_name: str
     photo_url: str = None
     phone: str = None
     role: str = RoleType.buyer.name
