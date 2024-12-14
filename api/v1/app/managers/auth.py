@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import HTTPException, status
 
 from ....supabase.supabase_client import supabase
-from ..schemas.resquests.user import UpdateUser, SignInUser
+from ..schemas.resquests.user import UpdateUser, SignInUser, UserRegister
 from ..schemas.responses.custom_responses import UNEXPECTED_ERROR
 
 load_dotenv()
@@ -18,34 +18,37 @@ class AuthManager:
     async def create_user(user_data):
         """Registers a user and returns the response or error."""
         try:
-            await supabase.auth.sign_up(
+            response = supabase.auth.sign_up(
                 {
-                    "email": "email@example.com",
-                    "password": "password",
-                    "options": {"data": f"{(UpdateUser(**user_data))}"}
+                    "email": user_data["email"],
+                    "password": user_data["password"],
+                    "options": {
+                        "data": user_data
+                    }
                 }
             )
+            return response
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e)
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
         # I am putting this here incase we need to redirect our users to a special page after they are just registered.
         # 'options': {
         #     'email_redirect_to': EMAIL_SIGN_UP_REDIRECT_URL,
         # }
 
     @staticmethod
-    async def update_user(data_to_update):
+    async def update_user(data_to_update: UpdateUser):
         """
         This function handles user profile update
         :param data_to_update:
         :return: A user object as user profile
         """
         try:
-            response = await supabase.auth.update_user({
-                "data": UpdateUser(**data_to_update)
+            response = supabase.auth.update_user({
+                "data": data_to_update.dict()
             })
             return response
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"{e}")
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_in_user_with_passwd_and_email(user_data):
@@ -55,12 +58,14 @@ class AuthManager:
         :return: it signs in a user if the credentials are correct.
         """
         try:
-            await supabase.auth.sign_in_with_password(
-                SignInUser(**user_data)
+            supabase.auth.sign_in_with_password(
+                {
+                    "email": user_data["email"],
+                    "password": user_data["password"]
+                }
             )
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"{e}")
-
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_in_with_email_otp(email):
@@ -69,13 +74,17 @@ class AuthManager:
         :param email:
         :return:
         """
-        response = await supabase.auth.sign_in_with_otp(
-            {
-                "email": email,
-                "options": {"email_redirect_to": EMAIL_SIGN_UP_REDIRECT_URL},
-            }
-        )
-        return response
+        try:
+            response = supabase.auth.sign_in_with_otp(
+                {
+                    "email": email,
+                    "options": {"email_redirect_to": EMAIL_SIGN_UP_REDIRECT_URL},
+                }
+            )
+            return response
+
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_in_with_sms_otp(phone_number):
@@ -84,10 +93,14 @@ class AuthManager:
         :param phone_number:
         :return:
         """
-        response = await supabase.auth.sign_in_with_otp({
-            "phone": phone_number,
-        })
-        return response
+        try:
+
+            response = supabase.auth.sign_in_with_otp({
+                "phone": phone_number,
+            })
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_in_user_with_whatsapp(whatsapp_number):
@@ -96,13 +109,16 @@ class AuthManager:
         :param whatsapp_number:
         :return:
         """
-        response = await supabase.auth.sign_in_with_otp({
-            "phone": whatsapp_number,
-            "options": {
-                "channel": "whatsapp",
-            }
-        })
-        return response
+        try:
+            response = supabase.auth.sign_in_with_otp({
+                "phone": whatsapp_number,
+                "options": {
+                    "channel": "whatsapp",
+                }
+            })
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_in_user_with_third_party(third_party_name):
@@ -111,10 +127,14 @@ class AuthManager:
         :param third_party_name:
         :return:
         """
-        response = await supabase.auth.sign_in_with_oauth({
-            "provider": third_party_name
-        })
-        return response
+        try:
+
+            response = supabase.auth.sign_in_with_oauth({
+                "provider": third_party_name
+            })
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_out_user():
@@ -122,9 +142,13 @@ class AuthManager:
         This function will sign out user from the app
         :return:
         """
-        response = await supabase.auth.sign_out()
+        try:
 
-        return response
+            response = supabase.auth.sign_out()
+
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def reset_password(email):
@@ -133,9 +157,12 @@ class AuthManager:
         :param email:
         :return:
         """
-        await supabase.auth.reset_password_for_email(email, {
-            "redirect_to": "https://example.com/update-password",
-        })
+        try:
+            supabase.auth.reset_password_for_email(email, {
+                "redirect_to": "https://example.com/update-password",
+            })
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def confirm_update_password(new_password):
@@ -144,8 +171,11 @@ class AuthManager:
         :param new_password:
         :return:
         """
-        response = supabase.auth.update_user({
-            "password": new_password
-        })
-        return response
+        try:
+            response = supabase.auth.update_user({
+                "password": new_password
+            })
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 

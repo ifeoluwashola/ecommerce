@@ -12,7 +12,7 @@ class UserManager:
         This helps to get a logged-in user's profile.
         :return:
         """
-        response = await supabase.auth.get_user()
+        response = supabase.auth.get_user()
         return response
 
     @staticmethod
