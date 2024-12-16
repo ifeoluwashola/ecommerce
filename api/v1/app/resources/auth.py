@@ -5,7 +5,7 @@ from ..managers.auth import AuthManager
 from ..schemas.resquests.user import UserRegister, UpdateUser, SignInUser
 
 
-router = APIRouter(prefix="/auth", tags=["User Authentication"])
+router = APIRouter(prefix="/api", tags=["User Authentication"])
 
 
 @router.post("/user")
@@ -15,7 +15,7 @@ async def create_user(user_details: UserRegister):
     :param user_details: this user input from the frontend.
     :return: a new user object if the user does not already exist or 'User already exists' response
     """
-    return await AuthManager.create_user(user_details.dict())
+    return await AuthManager.create_user(user_details.model_dump())
 
 
 @router.patch("/user/update")

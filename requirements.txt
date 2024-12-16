@@ -30,7 +30,7 @@ multidict==6.1.0
 packaging==24.2
 postgrest==0.18.0
 propcache==0.2.1
-# psycopg2-binary
+psycopg2-binary
 pydantic==2.10.3
 pydantic-settings==2.6.1
 pydantic_core==2.27.1

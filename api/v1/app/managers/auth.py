@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-# from decouple import config
 import os
 from dotenv import load_dotenv
 from fastapi import HTTPException, status
@@ -44,7 +43,7 @@ class AuthManager:
         """
         try:
             response = supabase.auth.update_user({
-                "data": data_to_update.dict()
+                "data": data_to_update.model_dump()
             })
             return response
         except Exception as e:
