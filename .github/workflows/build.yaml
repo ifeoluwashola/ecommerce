@@ -88,7 +88,7 @@ jobs:
         with:
           command: recommendations
           image: ${{ steps.meta.outputs.tags }}
-          to: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMPARE_TAG }}
+          to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
           github-token: ${{ secrets.GITHUB_TOKEN }}
