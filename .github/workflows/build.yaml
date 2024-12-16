@@ -86,7 +86,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
-          command: compare
+          command: quickview,recommendations
           image: ifeoluwashola/martsplaza-backend:${{ env.SHA }}
           to-latest: true
           ignore-unchanged: true
