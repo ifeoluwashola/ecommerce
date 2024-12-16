@@ -7,7 +7,7 @@ from ..schemas.requests.admin import AdminRegister, AdminSignIn, AdminUpdateProf
 from ..managers.auth import AdminAuthManager
 
 
-router = APIRouter(prefix="/admin/auth")
+router = APIRouter(prefix="/admin/auth", tags=["Admin Endpoints"])
 
 
 @router.post("/user")
@@ -17,9 +17,10 @@ async def create_user(user_data: AdminRegister):
 
 
 @router.put("/user/{user_id}")
-async def update_user(user_id: str):
+async def update_user(user_id: str, user_data_to_update: AdminUpdateProfile):
+    print(user_data_to_update.dict())
 
-    return await AdminAuthManager.update_a_user_by_id(user_id)
+    return await AdminAuthManager.update_a_user_by_id(user_id, user_data_to_update)
 
 
 @router.delete("/user/{user_id}")
@@ -35,14 +36,14 @@ async def invite_user(email: EmailStr):
 
 
 @router.get("/user/{user_id}")
-async def get_user_by_id(user_id):
+async def get_user_by_id(user_id: str):
 
-    return await AdminAuthManager.get_user_by_id(user_id)
+    return await AdminAuthManager.get_user_by_id(_id=user_id)
 
 
 @router.get("/users")
 async def get_all_users():
 
-    return AdminAuthManager.get_all_users()
+    return await AdminAuthManager.get_all_users()
 
 

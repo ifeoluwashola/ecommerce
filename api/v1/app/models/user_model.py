@@ -16,8 +16,10 @@ user = sqlalchemy.Table(
     sqlalchemy.Column("email", sqlalchemy.String(100), nullable=False, unique=True),
     sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
     sqlalchemy.Column("phone", sqlalchemy.String),
-    sqlalchemy.Column("role", sqlalchemy.Enum(RoleType), server_default=RoleType.merchant.name, nullable=False),
+    sqlalchemy.Column("role", sqlalchemy.Enum(RoleType), server_default=RoleType.buyer.name, nullable=False),
     sqlalchemy.Column("store_name", sqlalchemy.String),
+    sqlalchemy.Column("location", sqlalchemy.String),
+
     sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"),
                       nullable=True),
     sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"),

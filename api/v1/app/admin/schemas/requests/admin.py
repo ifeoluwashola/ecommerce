@@ -3,6 +3,8 @@
 
 from pydantic import BaseModel, EmailStr
 
+from ....models.enums import RoleType
+
 
 class AdminRegister(BaseModel):
     first_name: str
@@ -20,7 +22,9 @@ class AdminSignIn(BaseModel):
 
 
 class AdminUpdateProfile(BaseModel):
-    first_name: str = None
-    last_name: str = None
-    email: EmailStr = None
-    phone: str = None
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: str
+    role: RoleType
+
