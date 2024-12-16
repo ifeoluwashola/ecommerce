@@ -92,6 +92,9 @@ jobs:
     permissions:
         deployments: write
     steps:
+      # Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
       # Deploy to Render
       - name: Deploy to Render
         if: github.ref == 'refs/heads/development' && github.event.pull_request == 'merged' || github.event_name == 'push'
