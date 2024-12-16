@@ -102,7 +102,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Deploy to Render
-        if: github.ref == 'refs/heads/development' && github.event.pull_request == 'merged' || github.event_name == 'push'
+        if: ${{ github.ref_name == 'development' }} && ${{ github.event.pull_request == 'merged' || github.event_name == 'push' }}
         uses: JorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_SERVICE_ID }}
