@@ -1,0 +1,5 @@
+.gitignore
+pytest.ini
+readme.md
+venv/
+__pycache__/

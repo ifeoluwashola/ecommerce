@@ -5,7 +5,7 @@ from ..managers.auth import AuthManager
 from ..schemas.resquests.user import UserRegister, UpdateUser, SignInUser
 
 
-router = APIRouter(prefix="/auth", tags=["User Authentication"])
+router = APIRouter(prefix="/api", tags=["User Authentication"])
 
 
 @router.post("/user")

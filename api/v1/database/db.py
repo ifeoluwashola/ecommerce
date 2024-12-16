@@ -18,7 +18,7 @@ DB_NAME = os.getenv("DB_NAME")
 # DATABASE_URL = (f"{config('DB_TYPE')}://{config('DB_USER')}:{config('DB_PASSWORD')}"
 #                 f"@{config('DB_HOST')}/{config('DB_NAME')}")
 
-DATABASE_URL = f"{DB_TYPE}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+DATABASE_URL = f"{DB_TYPE}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}?sslmode=require"
 
 database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()

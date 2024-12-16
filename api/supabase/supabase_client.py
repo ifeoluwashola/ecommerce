@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import os
 
 # from decouple import config
@@ -18,5 +16,3 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 url: str = SUPABASE_URL
 key: str = SUPABASE_KEY
 supabase: Client = create_client(url, key)
-
-

@@ -1,13 +1,15 @@
 #!/usr/bin/python3
 
-from decouple import config
+import os
+from dotenv import load_dotenv
 from fastapi import HTTPException, status
 
 from ....supabase.supabase_client import supabase
 from ..schemas.resquests.user import UpdateUser, SignInUser, UserRegister
 from ..schemas.responses.custom_responses import UNEXPECTED_ERROR
 
-EMAIL_SIGN_UP_REDIRECT_URL = f"{config('SITE_HOST'), config('SITE_PORT')}"
+load_dotenv()
+EMAIL_SIGN_UP_REDIRECT_URL = f"{os.getenv('SITE_HOST'), os.getenv('SITE_PORT')}"
 
 
 class AuthManager:
