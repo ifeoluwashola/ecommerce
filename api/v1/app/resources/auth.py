@@ -31,7 +31,7 @@ async def update_user_profile(data: UpdateUser):
 @router.post("/user/sign_in/passwd_email")
 async def sign_in_user_password_email(user_details: SignInUser):
 
-    return await AuthManager.sign_in_user_with_passwd_and_email(user_details.dict())
+    return await AuthManager.sign_in_user_with_passwd_and_email(user_details.model_dump())
 
 
 @router.post("/user/sign_in/email_otp")

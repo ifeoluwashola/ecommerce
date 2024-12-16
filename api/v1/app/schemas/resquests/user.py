@@ -35,11 +35,11 @@ class UserRegister(BaseModel):
 
 
 class UpdateUser(BaseModel):
-    email: EmailStr = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    photo_url: Optional[str] = None
-    phone: Optional[int] = None
+    email: EmailStr
+    first_name: str
+    last_name: str
+    photo_url: str
+    phone: str
 
 
 class SignInUser(BaseModel):
