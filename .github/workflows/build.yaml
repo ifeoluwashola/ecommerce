@@ -32,6 +32,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    needs: sonarqube
     permissions:
       pull-requests: write
       contents: read
@@ -85,9 +86,9 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
-          command: recommendations
-          image: ${{ steps.meta.outputs.tags }}
-          to: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMPARE_TAG }}
+          command: quickview,recommendations
+          image: ifeoluwashola/martsplaza-backend:${{ env.SHA }}
+          to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -101,7 +102,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Deploy to Render
-        if: github.ref == 'refs/heads/development' && github.event.pull_request == 'merged' || github.event_name == 'push'
+        if: ${{ github.ref_name == 'development' }} && ${{ github.event.pull_request == 'merged' || github.event_name == 'push' }}
         uses: JorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_SERVICE_ID }}
