@@ -86,8 +86,8 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
-          command: recommendations
-          image: ${{ steps.meta.outputs.tags }}
+          command: quickview,recommendations,compare
+          image: ifeoluwashola/martsplaza-backend:${{ env.SHA }}
           to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
