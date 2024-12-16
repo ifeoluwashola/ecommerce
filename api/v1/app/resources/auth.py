@@ -15,7 +15,7 @@ async def create_user(user_details: UserRegister):
     :param user_details: this user input from the frontend.
     :return: a new user object if the user does not already exist or 'User already exists' response
     """
-    return await AuthManager.create_user(user_details.dict())
+    return await AuthManager.create_user(user_details.model_dump())
 
 
 @router.patch("/user/update")
@@ -31,7 +31,7 @@ async def update_user_profile(data: UpdateUser):
 @router.post("/user/sign_in/passwd_email")
 async def sign_in_user_password_email(user_details: SignInUser):
 
-    return await AuthManager.sign_in_user_with_passwd_and_email(user_details.dict())
+    return await AuthManager.sign_in_user_with_passwd_and_email(user_details.model_dump())
 
 
 @router.post("/user/sign_in/email_otp")

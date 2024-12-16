@@ -99,7 +99,7 @@ class AdminAuthManager:
         try:
             response = admin_auth_client.update_user_by_id(
                 _id,
-                {"user_metadata": user_data.dict()}
+                {"user_metadata": user_data.model_dump()}
             )
 
             return response

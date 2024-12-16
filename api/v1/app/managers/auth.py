@@ -41,7 +41,7 @@ class AuthManager:
         """
         try:
             response = supabase.auth.update_user({
-                "data": data_to_update.dict()
+                "data": data_to_update.model_dump()
             })
             return response
         except Exception as e:

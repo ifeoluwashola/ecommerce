@@ -13,7 +13,7 @@ router = APIRouter(prefix="/admin/auth", tags=["Admin Endpoints"])
 @router.post("/user")
 async def create_user(user_data: AdminRegister):
 
-    return await AdminAuthManager.create_user(user_data.dict())
+    return await AdminAuthManager.create_user(user_data.model_dump())
 
 
 @router.put("/user/{user_id}")
