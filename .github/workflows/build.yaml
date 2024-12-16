@@ -21,11 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: read
+      packages: write
 
     steps:
       # Checkout code
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+            ref: ${{ env.SHA }}
 
       # Authenticate to the container registry
       - name: Authenticate to registry ${{ env.REGISTRY }}
@@ -37,6 +41,9 @@ jobs:
 
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v3
+        with:
+            driver-opts: |
+              image=moby/buildkit:v0.10.6
 
       # Extract metadata (tags, labels) for Docker
       - name: Extract Docker metadata
@@ -57,6 +64,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
+          context: .
           sbom: ${{ github.event_name != 'pull_request' }}
           provenance: ${{ github.event_name != 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
@@ -72,7 +80,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
-          command: compare
+          command: recommendations
           image: ${{ steps.meta.outputs.tags }}
           to: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.COMPARE_TAG }}
           ignore-unchanged: true
