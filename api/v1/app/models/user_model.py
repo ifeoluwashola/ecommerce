@@ -1,28 +1,34 @@
-#!/usr/bin/python3
+import uuid
+from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from ...database.db import Base
+from ..models.enums import RoleType  # Import your RoleType Enum
 
 
-import sqlalchemy
-from sqlalchemy import text
+class User(Base):
+    __tablename__ = "users"
 
-from ...database.db import metadata
-from ..models.enums import RoleType
+    # Primary Key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
 
-UTC_NOW = text("timezone('UTC', now())")
+    # User Info
+    first_name = Column(String(50), nullable=False, comment="User's first name.")
+    last_name = Column(String(50), nullable=False, comment="User's last name.")
+    email = Column(String(100), unique=True, index=True, nullable=False, comment="Unique user email address.")
+    hashed_password = Column(String(128), nullable=False, comment="Hashed user password.")
+    location = Column(String(100), nullable=False, comment="User's location.")
+    
+    # Optional Fields
+    photo_url = Column(String(250), nullable=True, comment="Optional photo URL for the user.")
+    phone = Column(String(20), nullable=True, comment="Optional phone number.")
+    store_name = Column(String(100), nullable=True, comment="Optional store name for sellers.")
 
-user = sqlalchemy.Table(
-    "users",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("first_name", sqlalchemy.String(50), nullable=False),
-    sqlalchemy.Column("last_name", sqlalchemy.String(50), nullable=False),
-    sqlalchemy.Column("photo_url", sqlalchemy.String(250), nullable=False),
-    sqlalchemy.Column("email", sqlalchemy.String(100), nullable=False, unique=True),
-    sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
-    sqlalchemy.Column("phone", sqlalchemy.String),
-    sqlalchemy.Column("role", sqlalchemy.Enum(RoleType), server_default=RoleType.buyer.name, nullable=False),
-    sqlalchemy.Column("store_name", sqlalchemy.String),
-    sqlalchemy.Column("location", sqlalchemy.String),
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=UTC_NOW),
-    sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=UTC_NOW),
-    sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=UTC_NOW)
-)
+    # Role and Status
+    role = Column(Enum(RoleType), default=RoleType.buyer, nullable=False, comment="User role. Default is 'buyer'.")
+    is_active = Column(Boolean, default=True, nullable=False, comment="Indicates if the user is active.")
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    deleted_at = Column(DateTime(timezone=True), nullable=True, comment="Soft delete timestamp.")

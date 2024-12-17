@@ -2,18 +2,19 @@
 
 import os
 import databases
-import sqlalchemy
+from sqlalchemy import create_engine, MetaData
 from dotenv import load_dotenv
+from ..utils.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-load_dotenv()
+DATABASE_URL = settings.DATABASE_URL
 
-DB_TYPE = os.getenv("DB_TYPE")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_NAME")
+# SQLAlchemy engine
+engine = create_engine(DATABASE_URL)
 
-DATABASE_URL = f"{DB_TYPE}://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}?sslmode=require"
+# Session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-database = databases.Database(DATABASE_URL)
-metadata = sqlalchemy.MetaData()
+# Base for models
+Base = declarative_base()
+metadata = MetaData()
