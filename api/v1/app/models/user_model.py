@@ -3,7 +3,7 @@ from sqlalchemy import Column, String, Boolean, DateTime, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from ...database.db import Base
-from ..models.enums import RoleType  # Import your RoleType Enum
+from ..models.enums import RoleType
 
 
 class User(Base):

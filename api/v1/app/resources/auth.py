@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import EmailStr, BaseModel
+from sqlalchemy.orm import Session
 from typing import Any
-
+from ...database.db import get_db
 from ..managers.auth import AuthManager
 from ..schemas.requests.user import UserRegister, UpdateUser, SignInUser
-
+from ..schemas.responses.user import UserResponse
+from ..models.user_model import User
 
 router = APIRouter(prefix="/api", tags=["User Authentication"])
 
@@ -14,19 +16,23 @@ class EmailInput(BaseModel):
     email: EmailStr
 
 
+
 @router.post("/user", status_code=status.HTTP_201_CREATED, summary="Create a new user")
-async def create_user(user_details: UserRegister) -> Any:
+async def create_user(user_details: UserRegister, db: Session = Depends(get_db)) -> dict:
     """
     Create a new user if they do not already exist.
-
-    - **user_details**: Input from the frontend containing user registration details.
-    - **Returns**: A new user object or an error message if the user already exists.
     """
+    existing_user = db.query(User).filter(User.email == user_details.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
     try:
-        return await AuthManager.create_user(user_details.model_dump())
+        result = await AuthManager.create_user(user_details.model_dump(), db)
+        return result
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))   
 
 @router.patch("/user/update", status_code=status.HTTP_200_OK, summary="Update user profile")
 async def update_user_profile(data: UpdateUser) -> Any:
