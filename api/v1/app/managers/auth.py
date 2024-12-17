@@ -76,7 +76,6 @@ class AuthManager:
 
             # Serialize the custom user using the Pydantic model
             return {
-                "supabase_user": response.user.__dict__,
                 "custom_user": UserResponse.model_validate(new_user)  # Serialize SQLAlchemy object
             }
 
