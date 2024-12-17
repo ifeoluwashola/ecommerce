@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import HTTPException, status
 
 from ....supabase.supabase_client import supabase
-from ..schemas.resquests.user import UpdateUser, SignInUser, UserRegister
+from ..schemas.requests.user import UpdateUser, SignInUser, UserRegister
 from ..schemas.responses.custom_responses import UNEXPECTED_ERROR
 
 load_dotenv()

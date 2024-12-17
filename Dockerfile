@@ -1,21 +1,28 @@
-FROM python:3.13-alpine
+FROM python:3-alpine AS builder
 
 WORKDIR /app
 
-COPY requirements.txt .
+RUN apk add --no-cache gcc libffi-dev musl-dev py3-virtualenv
 
-RUN apk add --no-cache gcc libffi-dev musl-dev py3-virtualenv && \
-    addgroup -g 1000 appuser && \
-    adduser -u 1000 -G appuser -h /home/appuser -D appuser && \
-    chown -R appuser:appuser /app
-
-USER appuser
+COPY requirements.txt . 
 
 RUN python -m venv venv && \
-    . venv/bin/activate && \
-    pip install --no-cache-dir -r requirements.txt
+    venv/bin/pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+FROM python:3-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache libffi && \
+    addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -h /home/appuser -D appuser
+
+COPY --from=builder /app/venv /app/venv
+COPY --chown=appuser:appuser api/ ./api/
+COPY --chown=appuser:appuser main.py .
+COPY .env .
+
+USER appuser
 
 EXPOSE 8000
 

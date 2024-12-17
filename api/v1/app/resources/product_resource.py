@@ -6,7 +6,7 @@ from typing import List
 from fastapi import APIRouter, status
 
 from ..managers.product_manager import ProductManager
-from ..schemas.resquests.product import ProductRead
+from ..schemas.requests.product import ProductRead
 
 router = APIRouter()
 
