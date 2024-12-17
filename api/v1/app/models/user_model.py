@@ -2,9 +2,12 @@
 
 
 import sqlalchemy
+from sqlalchemy import text
 
 from ...database.db import metadata
 from ..models.enums import RoleType
+
+UTC_NOW = text("timezone('UTC', now())")
 
 user = sqlalchemy.Table(
     "users",
@@ -19,12 +22,7 @@ user = sqlalchemy.Table(
     sqlalchemy.Column("role", sqlalchemy.Enum(RoleType), server_default=RoleType.buyer.name, nullable=False),
     sqlalchemy.Column("store_name", sqlalchemy.String),
     sqlalchemy.Column("location", sqlalchemy.String),
-
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"),
-                      nullable=True),
-    sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"),
-                      nullable=True),
-    sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=sqlalchemy.text("timezone('UTC', now())"),
-                      nullable=True),
-
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=UTC_NOW),
+    sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=UTC_NOW),
+    sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=UTC_NOW)
 )

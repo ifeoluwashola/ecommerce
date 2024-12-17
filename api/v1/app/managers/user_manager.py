@@ -19,11 +19,3 @@ class UserManager:
     async def set_up_preference():
         return
 
-    # @staticmethod
-    # async def get_all_user():
-    #     """
-    #     This method queries the database through supabase to get all users from the database:
-    #     :returns - list of users
-    #     """
-    #     result = supabase.table("users").select("*").execute()
-    #     return result

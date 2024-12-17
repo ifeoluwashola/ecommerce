@@ -23,7 +23,7 @@ env_path = ".env"
 
 # check if secret key exists
 with open(env_path, "r") as env_file:
-    if "SECRET_KEY=" and "SALT=" not in env_file.read():
+    if not any(key in env_file.read() for key in ["SECRET_KEY=", "SALT="]):
         with open(env_path, "a") as env_file_append:
             # append the secret key to .env
             env_file_append.write(f"\nSECRET_KEY={secret_key}\nSALT={salt}")

@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
-
+from sqlalchemy import text
 import sqlalchemy
-
 from ....database.db import metadata
 from ..models.enums import AdminType
 
+UTC_NOW = text("timezone('UTC', now())")
 user = sqlalchemy.Table(
     "admins",
     metadata,
@@ -17,10 +17,7 @@ user = sqlalchemy.Table(
     sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
     sqlalchemy.Column("phone", sqlalchemy.String),
     sqlalchemy.Column("role", sqlalchemy.Enum(AdminType), server_default=AdminType.regular_admin.name, nullable=False),
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"),
-                      nullable=True),
-    sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=sqlalchemy.text("timezone('UTC', now())"),
-                      nullable=True),
-    sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=sqlalchemy.text("timezone('UTC', now())"),
-                      nullable=True)
+    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=UTC_NOW),
+    sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=UTC_NOW),
+    sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=UTC_NOW)
 )

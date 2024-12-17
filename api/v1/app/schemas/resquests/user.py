@@ -3,7 +3,6 @@
 from string import punctuation
 from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator, Field
-
 from ...models.enums import RoleType
 
 
@@ -12,8 +11,8 @@ class UserRegister(BaseModel):
     password: str = Field(..., min_length=8, max_length=128, description="Password must be strong.")
     first_name: str
     last_name: str
-    photo_url: str = None
-    phone: str = None
+    photo_url: Optional[str] = None
+    phone: Optional[str] = None
     role: str = RoleType.buyer.name
 
     @classmethod
