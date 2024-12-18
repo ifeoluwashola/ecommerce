@@ -23,6 +23,29 @@ logger = logging.getLogger(__name__)
 
 class AuthManager:
     @staticmethod
+    async def _handle_request(method_name, *args, **kwargs):
+        """Helper method to handle requests and exceptions."""
+        try:
+            method = getattr(supabase.auth, method_name)
+            response = method(*args, **kwargs)
+
+            # Convert response to dictionary for JSON serialization
+            if hasattr(response, "user") or hasattr(response, "session"):
+                response_dict = {
+                    "user": response.user.__dict__ if response.user else None,
+                    "session": response.session.__dict__ if response.session else None
+                }
+                logger.info(f"AuthManager.{method_name} successful.")
+                return response_dict
+
+            # If response is already a dict or primitive, return as is
+            return response
+
+        except Exception as e:
+            logger.error(f"AuthManager.{method_name} failed: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    @staticmethod
     async def create_user(user_data: dict, db: Session = Depends(get_db)):
         """
         Creates a new user in Supabase Auth and inserts a record into the public.users table.
@@ -76,7 +99,7 @@ class AuthManager:
 
             # Serialize the custom user using the Pydantic model
             return {
-                "custom_user": UserResponse.model_validate(new_user)  # Serialize SQLAlchemy object
+                "custom_user": UserResponse.model_validate(new_user)  
             }
 
         except HTTPException as e:
