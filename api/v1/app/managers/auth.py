@@ -44,7 +44,7 @@ class AuthManager:
         except Exception as e:
             logger.error(f"AuthManager.{method_name} failed: {str(e)}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
+        
     @staticmethod
     async def create_user(user_data: dict, db: Session = Depends(get_db)):
         """
@@ -117,9 +117,18 @@ class AuthManager:
     
     @staticmethod
     async def update_user(data_to_update: UpdateUser):
-        return await AuthManager._handle_request("update_user", {
-            "data": data_to_update.model_dump()
-        })
+        """
+        This function handles user profile update
+        :param data_to_update:
+        :return: A user object as user profile
+        """
+        try:
+            response = supabase.auth.update_user({
+                "data": data_to_update.model_dump()
+            })
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
     @staticmethod
     async def sign_in_user_with_passwd_and_email(user_data):

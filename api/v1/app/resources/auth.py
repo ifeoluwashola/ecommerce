@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import EmailStr, BaseModel
 from sqlalchemy.orm import Session
 from typing import Any
+import logging
 from ...database.db import get_db
 from ..managers.auth import AuthManager
 from ..schemas.requests.user import UserRegister, UpdateUser, SignInUser
@@ -10,12 +11,12 @@ from ..models.user_model import User
 
 router = APIRouter(prefix="/api", tags=["User Authentication"])
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Pydantic Model for email input (used in sign-in OTP endpoint)
 class EmailInput(BaseModel):
     email: EmailStr
-
-
 
 @router.post("/user", status_code=status.HTTP_201_CREATED, summary="Create a new user")
 async def create_user(user_details: UserRegister, db: Session = Depends(get_db)) -> dict:
@@ -34,19 +35,14 @@ async def create_user(user_details: UserRegister, db: Session = Depends(get_db))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))   
 
-@router.patch("/user/update", status_code=status.HTTP_200_OK, summary="Update user profile")
-async def update_user_profile(data: UpdateUser) -> Any:
+@router.patch("/user/update")
+async def update_user_profile(data: UpdateUser):
     """
-    Update an existing user's profile.
-
-    - **data**: Input from the user containing updated profile details.
-    - **Returns**: Updated user object or retains original details if no changes are passed.
+    This handles any update by the user to their profile
+    :param data: inputs from the user passed to the backend from the frontend.
+    :return: updated user object if any valid inputs are passed or retains the details unchanged if nothing is passed.
     """
-    try:
-        return await AuthManager.update_user(data)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
+    return await AuthManager.update_user(data)
 
 @router.post(
     "/user/sign-in/password-email",
