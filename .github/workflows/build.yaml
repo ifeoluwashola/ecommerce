@@ -35,7 +35,7 @@ jobs:
   write-creds-from-secrets:
     name: 'Write env from secrets'
     runs-on: ubuntu-latest
-    # needs: sonarqube
+    needs: sonarqube
         
     steps:
       - name: Checkout branch
