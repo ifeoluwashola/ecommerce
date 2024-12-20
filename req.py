@@ -3,9 +3,9 @@
 import requests
 
 # Login and obtain the token
-response = requests.post('https://ecommerce-42z0.onrender.com/api/users/login', params={
-    'email': 'user+1@example.com',
-    'password': 'password'
+response = requests.post('http://localhost:8000/api/user/update', params={
+    'email': 'ifeoluwadlove@gmail.com',
+    'password': 'Ifeoluwa.1'
 })
 
 data = response.json()
@@ -16,7 +16,7 @@ def get_user_profile():
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
-    profile_response = requests.get('https://ecommerce-42z0.onrender.com/api/users/profile', headers=headers)
+    profile_response = requests.get('http://localhost:8000/user/user/me', headers=headers)
     return profile_response.json()
 
 # Function to get Seller's dashboard if the user role is seller
@@ -43,8 +43,8 @@ def view_logs():
 
 profile_data = get_user_profile()
 print(profile_data)
-seller_dashboard = get_seller_dashboard()
-print(seller_dashboard)
+# seller_dashboard = get_seller_dashboard()
+# print(seller_dashboard)
 # list_user = list_users()
 # logs = view_logs()
 # print(profile_data)
