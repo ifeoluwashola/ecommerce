@@ -58,21 +58,10 @@ class AuthManager:
                     }
                 }
             })
-
-            hashed_password = bcrypt.hashpw(user_data["hashed_password"].encode(), bcrypt.gensalt()).decode()
-            public_table = (service_client.table("users")
-                            .insert({
-                                **user_data,
-                                "id": auth_table.user.id,
-                                "is_active": True,
-                                "hashed_password": hashed_password
-                            })
-                            .execute())
             
             if not auth_table.user:
                 raise HTTPException(status_code=400, detail="Failed to create user in Supabase Auth.")
 
-            
             return {
                 "message": "User created successfully",
                 "user_id": auth_table.user.user_metadata
@@ -82,52 +71,64 @@ class AuthManager:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     @staticmethod
-    async def fetch_user(user_id: str) -> dict:
+    async def get_and_update_user(user_id: str, data_to_update: dict = None) -> dict:
         """
-        Fetch a user's profile using the Supabase client.
+        Fetches current user data and optionally updates their profile in Supabase Auth.
+        If `data_to_update` is None, returns the current user data. If fields in `data_to_update`
+        are missing or empty, retains the current values.
         """
         try:
-            # Retrieve user from Supabase Auth
-            user_response = supabase.auth.get_user()
-
-            if not user_response or user_response.user.id != user_id:
+            # Fetch current user data
+            current_user = supabase.auth.get_user()
+            if not current_user:
                 raise HTTPException(status_code=404, detail="User not found.")
-
-            # Return user metadata
-            return user_response.user.user_metadata
-        except Exception as e:
-            logger.error(f"Error fetching user: {str(e)}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-    @staticmethod
-    async def update_user(data_to_update: dict, user_id: str) -> dict:
-        """
-        Updates a user's profile in Supabase Auth.
-        """
-        try:
+    
+            # Extract current data
+            current_data = {
+                "email": current_user.user.email,
+                "first_name": current_user.user.user_metadata.get("first_name", ""),
+                "last_name": current_user.user.user_metadata.get("last_name", ""),
+                "location": current_user.user.user_metadata.get("location", ""),
+                "photo_url": current_user.user.user_metadata.get("photo_url", ""),
+                "phone": current_user.user.user_metadata.get("phone", ""),
+                "role": current_user.user.user_metadata.get("role", None),
+            }
+    
+            # If no update data is provided, return the current user data
+            if data_to_update is None:
+                return current_data
+    
+            # Merge current data with the update data, preserving existing values
+            updated_data = {
+                key: data_to_update.get(key) if data_to_update.get(key) not in [None, ""] else value
+                for key, value in current_data.items()
+            }
+    
+            # Proceed to update user data
             response = supabase.auth.update_user({
-                "email": data_to_update.get("email"),
+                "email": updated_data["email"],
                 "data": {
-                    "first_name": data_to_update.get("first_name"),
-                    "last_name": data_to_update.get("last_name"),
-                    "location": data_to_update.get("location"),
-                    "photo_url": data_to_update.get("photo_url"),
-                    "phone": data_to_update.get("phone"),
-                    "role": data_to_update.get("role")
+                    "first_name": updated_data["first_name"],
+                    "last_name": updated_data["last_name"],
+                    "location": updated_data["location"],
+                    "photo_url": updated_data["photo_url"],
+                    "phone": updated_data["phone"],
+                    "role": updated_data["role"],
                 }
             })
-
+    
             if not response.user:
                 raise HTTPException(status_code=400, detail="Failed to update user in Supabase Auth.")
-
+    
             return {
                 "message": "User updated successfully",
-                "user_id": response.user.id
+                "user_id": response.user.email
             }
         except Exception as e:
-            logger.error(f"Error updating user: {str(e)}")
+            logger.error(f"Error in get_and_update_user: {str(e)}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-            
+
+
     @staticmethod
     async def sign_in_user_with_passwd_and_email(user_data: dict) -> dict:
         """

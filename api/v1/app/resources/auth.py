@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import EmailStr, BaseModel
 from sqlalchemy.orm import Session
-from typing import Any
+from typing import Any, Optional
 import logging
 from ...database.db import get_db
 from ..managers.auth import AuthManager
 from ..schemas.requests.user import UserRegister, UpdateUser, SignInUser
 from ...utils.auth import get_current_user
+from ....supabase.supabase_client import supabase
 
 router = APIRouter(prefix="/api", tags=["User Authentication"])
 
@@ -28,20 +29,30 @@ async def create_user(user_details: UserRegister) -> dict:
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-@router.patch("/user/update", status_code=status.HTTP_200_OK, summary="Update user profile")
+@router.patch("/user/update", status_code=status.HTTP_200_OK, summary="Fetch or update user profile")
 async def update_user_profile(
-    data: UpdateUser,
-    user_id: str
+    user_id: str,
+    request: Request
 ) -> Any:
     """
-    Update the authenticated user's profile.
-    Updates data directly in `auth.users` via Supabase.
+    Fetch or update the authenticated user's profile.
+    - Fetches current user data when called without a body.
+    - Updates user data when a body with modified fields is provided.
     """
     try:
-        result = await AuthManager.update_user(data.model_dump(), user_id)
+        # Try to read the request body, fallback to None if empty
+        try:
+            update_data = await request.json()
+        except Exception:
+            update_data = None  # No data provided in the request
+
+        # Pass the data to the service for fetching/updating
+        result = await AuthManager.get_and_update_user(user_id=user_id, data_to_update=update_data)
         return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.post(
     "/user/sign-in/password-email",
