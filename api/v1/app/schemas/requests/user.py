@@ -27,7 +27,6 @@ class UserRegister(BaseModel):
     first_name: str = Field(..., description="User's first name.")
     last_name: str = Field(..., description="User's last name.")
     location: str = Field(..., description="User's location.")
-    photo_url: Optional[str] = Field(None, description="Optional photo URL for the user.")
     phone: Optional[str] = Field(None, description="Optional phone number.")
     role: str = Field(default=RoleType.buyer.name, description="User role. Defaults to 'buyer'.")
 

@@ -1,10 +1,11 @@
 import os
 from fastapi import HTTPException, status
-from ....supabase.supabase_client import supabase, service_client
+from ....supabase.supabase_client import supabase
+from dotenv import load_dotenv
 import logging
-import bcrypt
 
 # Load environment variables
+load_dotenv()
 EMAIL_SIGN_UP_REDIRECT_URL = f"{os.getenv('SITE_HOST')}:{os.getenv('SITE_PORT')}"
 
 # Configure logging
@@ -52,7 +53,6 @@ class AuthManager:
                         "first_name": user_data.get("first_name"),
                         "last_name": user_data.get("last_name"),
                         "location": user_data.get("location"),
-                        "photo_url": user_data.get("photo_url"),
                         "phone": user_data.get("phone"),
                         "role": user_data.get("role", "buyer")
                     }
@@ -64,7 +64,7 @@ class AuthManager:
 
             return {
                 "message": "User created successfully",
-                "user_id": auth_table.user.user_metadata
+                "user_data": auth_table.user.user_metadata
             }
         except Exception as e:
             logger.error(f"Error creating user: {str(e)}")
@@ -122,7 +122,7 @@ class AuthManager:
     
             return {
                 "message": "User updated successfully",
-                "user_id": response.user.email
+                "user_data": response.user.user_metadata
             }
         except Exception as e:
             logger.error(f"Error in get_and_update_user: {str(e)}")

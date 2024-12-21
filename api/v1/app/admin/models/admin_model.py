@@ -1,23 +1,32 @@
 #!/usr/bin/python3
-
-from sqlalchemy import text
-import sqlalchemy
-from ....database.db import metadata
+import uuid
+from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from ....database.db import Base
 from ..models.enums import AdminType
 
-UTC_NOW = text("timezone('UTC', now())")
-user = sqlalchemy.Table(
-    "admins",
-    metadata,
-    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-    sqlalchemy.Column("first_name", sqlalchemy.String(50), nullable=False),
-    sqlalchemy.Column("last_name", sqlalchemy.String(50), nullable=False),
-    sqlalchemy.Column("photo_url", sqlalchemy.String(250), nullable=False),
-    sqlalchemy.Column("email", sqlalchemy.String(100), nullable=False, unique=True),
-    sqlalchemy.Column("password", sqlalchemy.String, nullable=False),
-    sqlalchemy.Column("phone", sqlalchemy.String),
-    sqlalchemy.Column("role", sqlalchemy.Enum(AdminType), server_default=AdminType.regular_admin.name, nullable=False),
-    sqlalchemy.Column("created_at", sqlalchemy.DateTime, server_default=UTC_NOW),
-    sqlalchemy.Column("deleted_at", sqlalchemy.DateTime, server_default=UTC_NOW),
-    sqlalchemy.Column("updated_at", sqlalchemy.DateTime, onupdate=UTC_NOW)
-)
+class User(Base):
+    __tablename__ = "admin_users"
+
+    # Primary Key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+
+    # User Info
+    first_name = Column(String(50), nullable=False, comment="User's first name.")
+    last_name = Column(String(50), nullable=False, comment="User's last name.")
+    email = Column(String(100), unique=True, index=True, nullable=False, comment="Unique user email address.")
+    password = Column(String(128), nullable=False, comment="Hashed user password.")
+    location = Column(String(100), nullable=False, comment="User's location.")
+    
+    # Optional Fields
+    photo_url = Column(String(250), nullable=True, comment="Optional photo URL for the user.")
+    phone = Column(String(20), nullable=True, comment="Optional phone number.")
+    
+    # Role and Status
+    role = Column(Enum(AdminType), default=AdminType.regular_admin, nullable=False, comment="User role. Default is 'buyer'.")
+   
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    deleted_at = Column(DateTime(timezone=True), nullable=True, comment="Soft delete timestamp.")

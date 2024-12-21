@@ -1,12 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import EmailStr, BaseModel
-from sqlalchemy.orm import Session
-from typing import Any, Optional
+from typing import Any
 import logging
-from ...database.db import get_db
 from ..managers.auth import AuthManager
-from ..schemas.requests.user import UserRegister, UpdateUser, SignInUser
-from ...utils.auth import get_current_user
+from ..schemas.requests.user import UserRegister, SignInUser
 from ....supabase.supabase_client import supabase
 
 router = APIRouter(prefix="/api", tags=["User Authentication"])
