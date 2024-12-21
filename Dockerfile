@@ -18,9 +18,8 @@ RUN apk add --no-cache libffi && \
     adduser -u 1000 -G appuser -h /home/appuser -D appuser
 
 COPY --from=builder /app/venv /app/venv
-COPY --chown=appuser:appuser api/ ./api/
-COPY --chown=appuser:appuser main.py .
-COPY .env .
+COPY --chown=appuser:appuser --chmod=755 api/ ./api/
+COPY --chown=appuser:appuser --chmod=755 main.py .
 
 USER appuser
 
