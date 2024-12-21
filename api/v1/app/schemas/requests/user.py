@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-from string import punctuation
 from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from string import punctuation
 from ...models.enums import RoleType
 
 

@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 
-import os
-import databases
-import sqlalchemy
-from dotenv import load_dotenv
+from sqlalchemy import create_engine, MetaData
 from ..utils.config import settings
 from sqlalchemy.orm import declarative_base, sessionmaker
 
