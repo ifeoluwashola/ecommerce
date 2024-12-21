@@ -1,78 +1,73 @@
-from fastapi import APIRouter
-from pydantic import EmailStr
-
+from fastapi import APIRouter, HTTPException, status, Request
+from pydantic import EmailStr, BaseModel
+from typing import Any
+import logging
 from ..managers.auth import AuthManager
-from ..schemas.requests.user import UserRegister, UpdateUser, SignInUser
-
+from ..schemas.requests.user import UserRegister, SignInUser
+from ....supabase.supabase_client import supabase
 
 router = APIRouter(prefix="/api", tags=["User Authentication"])
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-@router.post("/user")
-async def create_user(user_details: UserRegister):
+# Pydantic Model for email input (used in sign-in OTP endpoint)
+class EmailInput(BaseModel):
+    email: EmailStr
+
+@router.post("/user", status_code=status.HTTP_201_CREATED, summary="Create a new user")
+async def create_user(user_details: UserRegister) -> dict:
     """
-    This endpoint will create a user if it does not already in existence:
-    :param user_details: this user input from the frontend.
-    :return: a new user object if the user does not already exist or 'User already exists' response
+    Create a new user in Supabase Auth.
     """
-    return await AuthManager.create_user(user_details.model_dump())
+    try:
+        result = await AuthManager.create_user(user_details.model_dump())
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-
-@router.patch("/user/update")
-async def update_user_profile(data: UpdateUser):
+@router.patch("/user/update", status_code=status.HTTP_200_OK, summary="Fetch or update user profile")
+async def update_user_profile(
+    user_id: str,
+    request: Request
+) -> Any:
     """
-    This handles any update by the user to their profile
-    :param data: inputs from the user passed to the backend from the frontend.
-    :return: updated user object if any valid inputs are passed or retains the details unchanged if nothing is passed.
+    Fetch or update the authenticated user's profile.
+    - Fetches current user data when called without a body.
+    - Updates user data when a body with modified fields is provided.
     """
-    return await AuthManager.update_user(data)
+    try:
+        # Try to read the request body, fallback to None if empty
+        try:
+            update_data = await request.json()
+        except Exception:
+            update_data = None  # No data provided in the request
 
+        # Pass the data to the service for fetching/updating
+        result = await AuthManager.get_and_update_user(user_id=user_id, data_to_update=update_data)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@router.post("/user/sign_in/passwd_email")
-async def sign_in_user_password_email(user_details: SignInUser):
+@router.post(
+    "/user/sign-in/password-email",
+    status_code=status.HTTP_200_OK,
+    summary="Sign in using email and password",
+)
+async def sign_in_user_with_password_email(user_details: SignInUser) -> Any:
+    """
+    Authenticate a user using email and password.
+    """
+    try:
+        return await AuthManager.sign_in_user_with_passwd_and_email(user_details.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
-    return await AuthManager.sign_in_user_with_passwd_and_email(user_details.model_dump())
-
-
-@router.post("/user/sign_in/email_otp")
-async def sign_in_user_email_otp(email: EmailStr):
-
-    return await AuthManager.sign_in_with_email_otp(email)
-
-
-@router.post("/user/sign_in/sms_otp")
-async def sign_in_user_sms_otp(phone_number: str):
-
-    return await AuthManager.sign_in_with_sms_otp(phone_number)
-
-
-@router.post("/user/sign_in/whatsapp")
-async def sign_in_user_whatsapp_otp(whatsapp_number: str):
-
-    return await AuthManager.sign_in_user_with_whatsapp(whatsapp_number)
-
-
-@router.post("/user/sign_in/third_party")
-async def sign_in_user_third_party(third_party: str):
-
-    return AuthManager.sign_in_user_with_third_party(third_party)
-
-
-@router.post("/user/sign_out")
-async def sign_out():
-
-    await AuthManager.sign_out_user()
-
-
-@router.post("/user/reset_password")
-async def reset_password(email: EmailStr):
-
+@router.post("/user/reset-password", status_code=status.HTTP_200_OK, summary="Reset user password")
+async def reset_password(email: EmailStr) -> Any:
+    """
+    Send a password reset email to the user.
+    """
     return await AuthManager.reset_password(email)
-
-
-@router.post("/user/confirm_password_reset")
-async def confirm_password_reset(new_password):
-
-    return await AuthManager.confirm_update_password(new_password)
-
-

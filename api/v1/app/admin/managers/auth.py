@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from fastapi import HTTPException, status
-
+import re
 from .....supabase.supabase_admin import admin_auth_client
 from ..schemas.requests.admin import AdminRegister, AdminSignIn, AdminUpdateProfile
 
@@ -16,15 +16,23 @@ class AdminAuthManager:
         :return a user object after a successful registration:
         """
         try:
+            if not re.match(r'^\+[1-9]\d{1,14}$', user_data["phone"]):
+                raise ValueError("Phone number must be in E.164 format.")
             response = admin_auth_client.create_user(
                 {
                     "email": user_data["email"],
                     "password": user_data["password"],
-                    "user_metadata": {"first_name": user_data["first_name"],
-                                      "last_name": user_data["last_name"],
-                                      "role": user_data["role"],
-                                      "phone": user_data["phone"]
-                                      }
+                    "phone": user_data["phone"],
+                    "email_confirm": True,
+                    "phone_confirm": True,
+                    "user_metadata":
+                    {
+                        "first_name": user_data["first_name"],
+                        "last_name": user_data["last_name"],
+                        "role": user_data["role"],
+                        "phone": user_data["phone"],
+                        "location": user_data["location"]
+                    } 
                 }
             )
             return response
