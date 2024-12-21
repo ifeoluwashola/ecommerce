@@ -1,180 +1,149 @@
-#!/usr/bin/python3
-
 import os
-from dotenv import load_dotenv
 from fastapi import HTTPException, status
-
 from ....supabase.supabase_client import supabase
-from ..schemas.requests.user import UpdateUser, SignInUser, UserRegister
-from ..schemas.responses.custom_responses import UNEXPECTED_ERROR
+from dotenv import load_dotenv
+import logging
 
+# Load environment variables
 load_dotenv()
-EMAIL_SIGN_UP_REDIRECT_URL = f"{os.getenv('SITE_HOST'), os.getenv('SITE_PORT')}"
+EMAIL_SIGN_UP_REDIRECT_URL = f"{os.getenv('SITE_HOST')}:{os.getenv('SITE_PORT')}"
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AuthManager:
     @staticmethod
-    async def create_user(user_data):
-        """Registers a user and returns the response or error."""
+    async def _handle_request(method_name, *args, **kwargs):
+        """
+        Helper method to handle Supabase Auth requests.
+        """
         try:
-            response = supabase.auth.sign_up(
-                {
-                    "email": user_data["email"],
-                    "password": user_data["password"],
-                    "options": {
-                        "data": user_data
+            method = getattr(supabase.auth, method_name)
+            response = method(*args, **kwargs)
+
+            # Convert response to dictionary for JSON serialization
+            if hasattr(response, "user") or hasattr(response, "session"):
+                response_dict = {
+                    "user": response.user.__dict__ if response.user else None,
+                    "session": response.session.__dict__ if response.session else None
+                }
+                logger.info(f"AuthManager.{method_name} successful.")
+                return response_dict
+
+            # If response is already a dict or primitive, return as is
+            return response
+
+        except Exception as e:
+            logger.error(f"AuthManager.{method_name} failed: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    @staticmethod
+    async def create_user(user_data: dict) -> dict:
+        """
+        Creates a new user in Supabase Auth.
+        """
+        try:
+            auth_table = supabase.auth.sign_up({
+                "email": user_data["email"],
+                "password": user_data["hashed_password"],
+                "phone": user_data["phone"],
+                "options": {
+                    "data": {
+                        "first_name": user_data.get("first_name"),
+                        "last_name": user_data.get("last_name"),
+                        "location": user_data.get("location"),
+                        "phone": user_data.get("phone"),
+                        "role": user_data.get("role", "buyer")
                     }
                 }
-            )
-            return response
+            })
+            
+            if not auth_table.user:
+                raise HTTPException(status_code=400, detail="Failed to create user in Supabase Auth.")
+
+            return {
+                "message": "User created successfully",
+                "user_data": auth_table.user.user_metadata
+            }
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-        # I am putting this here incase we need to redirect our users to a special page after they are just registered.
-        # 'options': {
-        #     'email_redirect_to': EMAIL_SIGN_UP_REDIRECT_URL,
-        # }
+            logger.error(f"Error creating user: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     @staticmethod
-    async def update_user(data_to_update: UpdateUser):
+    async def get_and_update_user(user_id: str, data_to_update: dict = None) -> dict:
         """
-        This function handles user profile update
-        :param data_to_update:
-        :return: A user object as user profile
+        Fetches current user data and optionally updates their profile in Supabase Auth.
+        If `data_to_update` is None, returns the current user data. If fields in `data_to_update`
+        are missing or empty, retains the current values.
         """
         try:
+            # Fetch current user data
+            current_user = supabase.auth.get_user()
+            if not current_user:
+                raise HTTPException(status_code=404, detail="User not found.")
+    
+            # Extract current data
+            current_data = {
+                "email": current_user.user.email,
+                "first_name": current_user.user.user_metadata.get("first_name", ""),
+                "last_name": current_user.user.user_metadata.get("last_name", ""),
+                "location": current_user.user.user_metadata.get("location", ""),
+                "photo_url": current_user.user.user_metadata.get("photo_url", ""),
+                "phone": current_user.user.user_metadata.get("phone", ""),
+                "role": current_user.user.user_metadata.get("role", None),
+            }
+    
+            # If no update data is provided, return the current user data
+            if data_to_update is None:
+                return current_data
+    
+            # Merge current data with the update data, preserving existing values
+            updated_data = {
+                key: data_to_update.get(key) if data_to_update.get(key) not in [None, ""] else value
+                for key, value in current_data.items()
+            }
+    
+            # Proceed to update user data
             response = supabase.auth.update_user({
-                "data": data_to_update.model_dump()
-            })
-            return response
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-    @staticmethod
-    async def sign_in_user_with_passwd_and_email(user_data):
-        """
-        This function sings in a user provided the user has the correct credentials, such as email and password
-        :param user_data: the user's details
-        :return: it signs in a user if the credentials are correct.
-        """
-        try:
-            supabase.auth.sign_in_with_password(
-                {
-                    "email": user_data["email"],
-                    "password": user_data["password"]
-                }
-            )
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-    @staticmethod
-    async def sign_in_with_email_otp(email):
-        """
-        This will help sign in user with their registered email.
-        :param email:
-        :return:
-        """
-        try:
-            response = supabase.auth.sign_in_with_otp(
-                {
-                    "email": email,
-                    "options": {"email_redirect_to": EMAIL_SIGN_UP_REDIRECT_URL},
-                }
-            )
-            return response
-
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-    @staticmethod
-    async def sign_in_with_sms_otp(phone_number):
-        """
-        This will sign in user with their phone number.
-        :param phone_number:
-        :return:
-        """
-        try:
-
-            response = supabase.auth.sign_in_with_otp({
-                "phone": phone_number,
-            })
-            return response
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-    @staticmethod
-    async def sign_in_user_with_whatsapp(whatsapp_number):
-        """
-        This will sign in user with their WhatsApp number.
-        :param whatsapp_number:
-        :return:
-        """
-        try:
-            response = supabase.auth.sign_in_with_otp({
-                "phone": whatsapp_number,
-                "options": {
-                    "channel": "whatsapp",
+                "email": updated_data["email"],
+                "data": {
+                    "first_name": updated_data["first_name"],
+                    "last_name": updated_data["last_name"],
+                    "location": updated_data["location"],
+                    "photo_url": updated_data["photo_url"],
+                    "phone": updated_data["phone"],
+                    "role": updated_data["role"],
                 }
             })
-            return response
+    
+            if not response.user:
+                raise HTTPException(status_code=400, detail="Failed to update user in Supabase Auth.")
+    
+            return {
+                "message": "User updated successfully",
+                "user_data": response.user.user_metadata
+            }
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+            logger.error(f"Error in get_and_update_user: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 
     @staticmethod
-    async def sign_in_user_with_third_party(third_party_name):
+    async def sign_in_user_with_passwd_and_email(user_data: dict) -> dict:
         """
-        This will sign in user with third-party app such as Google, Facebook etc.
-        :param third_party_name:
-        :return:
+        Signs in a user with email and password.
         """
-        try:
-
-            response = supabase.auth.sign_in_with_oauth({
-                "provider": third_party_name
-            })
-            return response
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        return await AuthManager._handle_request("sign_in_with_password", {
+            "email": user_data["email"],
+            "password": user_data["hashed_password"]
+        })
 
     @staticmethod
-    async def sign_out_user():
+    async def reset_password(email: str) -> dict:
         """
-        This function will sign out user from the app
-        :return:
+        Sends a password reset email to the user.
         """
-        try:
-
-            response = supabase.auth.sign_out()
-
-            return response
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-    @staticmethod
-    async def reset_password(email):
-        """
-        This will take a user's email and sends a link to the email for the user to reset their password.
-        :param email:
-        :return:
-        """
-        try:
-            supabase.auth.reset_password_for_email(email, {
-                "redirect_to": "https://example.com/update-password",
-            })
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
-    @staticmethod
-    async def confirm_update_password(new_password):
-        """
-        This will make the user input their desired new password.
-        :param new_password:
-        :return:
-        """
-        try:
-            response = supabase.auth.update_user({
-                "password": new_password
-            })
-            return response
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
+        return await AuthManager._handle_request("reset_password_for_email", email, {
+            "redirect_to": EMAIL_SIGN_UP_REDIRECT_URL
+        })

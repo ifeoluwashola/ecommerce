@@ -1,4 +1,4 @@
-name: Docker
+name: MartsPlaza CI/CD
 
 on:
   push:
@@ -26,6 +26,7 @@ jobs:
           fetch-depth: 0
           
       - name: SonarQube Scan
+        if: ${{ github.ref_name == 'development' }} && ${{ github.event.pull_request == 'merged' || github.event_name == 'push' }}
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

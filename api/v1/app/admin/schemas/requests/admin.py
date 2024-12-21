@@ -14,6 +14,7 @@ class AdminRegister(BaseModel):
     photo_url: str
     role: str
     phone: str
+    location: str
 
 
 class AdminSignIn(BaseModel):
@@ -27,4 +28,5 @@ class AdminUpdateProfile(BaseModel):
     email: EmailStr
     phone: str
     role: RoleType
+    location: str
 
